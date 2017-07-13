@@ -1,36 +1,43 @@
 const { h, mount, Component, Text } = require("ink");
+var fetch = require("node-fetch");
+var libxmljs = require("libxmljs");
 
-class Counter extends Component {
+function parseXML(xml) {
+  const xmlDoc = libxmljs.parseXml(xml);
+  // xpath queries
+  const titles = xmlDoc.find("*//item//title");
+  const links = xmlDoc.find("*//item//link");
+
+  for (let i = 0; i < 5; i++) {
+    console.log("// --> ", titles[i].text(), "\n", links[i].text());
+  }
+}
+
+class Feed extends Component {
   constructor() {
     super();
 
     this.state = {
-      i: 0
+      i: ""
     };
   }
 
   render() {
     return (
-      <Text green>
-        {this.state.i} tests passed
+      <Text blue>
+        {this.state.i} DAILYDRIP BLOG POSTS
       </Text>
     );
   }
 
   componentDidMount() {
-    this.timer = setInterval(
-      () => {
-        this.setState({
-          i: this.state.i + 1
-        });
-      },
-      100
-    );
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.timer);
+    fetch("https://www.dailydrip.com/blog/feed.rss")
+      .then(response => response.text())
+      .then(response => parseXML(response))
+      .catch(error => {
+        console.error(error);
+      });
   }
 }
 
-mount(<Counter />, process.stdout);
+mount(<Feed />, process.stdout);
